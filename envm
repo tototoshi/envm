@@ -1,0 +1,68 @@
+#!/bin/bash
+
+current_dir=$(pwd)
+envs_dir="$HOME/.envm$current_dir"
+editor=${EDITOR:-vi}
+
+_print_usage () {
+  echo "Usage:"
+  echo "  envm ls            - lists environment valiables"
+  echo "  envm exec COMMAND  - wraps COMMAND with envdir"
+  echo "  envm set KEY VALUE - sets environment valiables"
+  echo "  envm edit KEY      - edits with $EDITOR"
+  echo "  envm rm KEY        - removes the environment variable"
+  echo "  envm help          - shows this message"
+}
+
+if ! which envdir > /dev/null; then
+  envdir not found
+fi
+
+if [ $# -eq 0 ]; then
+  _print_usage
+  exit 1
+fi
+
+[ -d $envs_dir ] || mkdir -p $envs_dir
+
+while [ $# -gt 0 ]
+do
+    case $1 in
+        exec)
+            shift
+            exec envdir $envs_dir "$@"
+            ;;
+        ls)
+            exec env -i $(which envdir) $envs_dir printenv
+            shift
+            ;;
+        set)
+            shift
+            echo $2 > "$envs_dir/$1"
+            shift
+            shift
+            ;;
+        rm)
+            shift
+            rm "$envs_dir/$1"
+            shift
+            ;;
+        edit)
+            shift
+            if [ $# -eq 0 ]; then
+                $editor "$envs_dir"
+            else
+                $editor "$envs_dir/$1"
+                shift
+            fi
+            ;;
+        help)
+            _print_usage
+            shift
+            ;;
+        *)
+            _print_usage
+            exit 1
+            ;;
+    esac
+done
