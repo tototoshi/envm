@@ -9,7 +9,7 @@ _print_usage () {
   echo "  envm ls            - lists environment valiables"
   echo "  envm exec COMMAND  - wraps COMMAND with envdir"
   echo "  envm set KEY VALUE - sets environment valiables"
-  echo "  envm edit KEY      - edits with $EDITOR"
+  echo "  envm edit KEY      - edits with \$EDITOR"
   echo "  envm rm KEY        - removes the environment variable"
   echo "  envm help          - shows this message"
 }
