@@ -22,6 +22,7 @@ Usage:
   envm ls            - lists environment valiables
   envm exec COMMAND  - wraps COMMAND with envdir
   envm set KEY VALUE - sets environment valiables
+  envm get KEY       - gets the value of KEY
   envm edit KEY      - edits with $EDITOR
   envm rm KEY        - removes the environment variable
   envm help          - shows this message

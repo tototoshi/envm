@@ -9,6 +9,7 @@ _print_usage () {
   echo "  envm ls            - lists environment valiables"
   echo "  envm exec COMMAND  - wraps COMMAND with envdir"
   echo "  envm set KEY VALUE - sets environment valiables"
+  echo "  envm get KEY       - gets the value of KEY"
   echo "  envm edit KEY      - edits with \$EDITOR"
   echo "  envm rm KEY        - removes the environment variable"
   echo "  envm help          - shows this message"
@@ -40,6 +41,11 @@ do
             shift
             echo $2 > "$envs_dir/$1"
             shift
+            shift
+            ;;
+        get)
+            shift
+            cat "$envs_dir/$1"
             shift
             ;;
         rm)
