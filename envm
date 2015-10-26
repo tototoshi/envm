@@ -16,7 +16,7 @@ _print_usage () {
 }
 
 if ! which envdir > /dev/null; then
-  envdir not found
+  echo envdir not found
 fi
 
 if [ $# -eq 0 ]; then
