@@ -39,9 +39,17 @@ do
             ;;
         set)
             shift
-            echo $2 > "$envs_dir/$1"
-            shift
-            shift
+            if [ $# -eq 1 ]; then
+                key=$(echo $1 | cut -f 1 -d =)
+                value=$(echo $1 | cut -f 2- -d =)
+                shift
+            else
+                key=$1
+                value=$2
+                shift
+                shift
+            fi
+            echo $value > "$envs_dir/$key"
             ;;
         get)
             shift
