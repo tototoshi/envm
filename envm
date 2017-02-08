@@ -1,82 +1,119 @@
-#!/bin/bash
+#!/usr/bin/env python
+import os
+import sys
 
-current_dir=$(pwd)
-envs_dir="$HOME/.envm$current_dir"
-editor=${EDITOR:-vi}
+def file_get_contents(filename):
+    with open(filename) as f:
+        return f.read()
 
-_print_usage () {
-  echo "Usage:"
-  echo "  envm ls            - lists environment valiables"
-  echo "  envm exec COMMAND  - wraps COMMAND with envdir"
-  echo "  envm set KEY VALUE - sets environment valiables"
-  echo "  envm get KEY       - gets the value of KEY"
-  echo "  envm edit KEY      - edits with \$EDITOR"
-  echo "  envm rm KEY        - removes the environment variable"
-  echo "  envm help          - shows this message"
-}
+def file_put_contents(filename, data):
+    with open(filename, "w") as f:
+        f.write(data)
 
-if ! which envdir > /dev/null; then
-  echo envdir not found
-fi
+def all_os_env_vars_as_dict():
+    envs = {}
+    for key in os.environ.keys():
+        envs[key] = os.environ[key]
+    return envs
 
-if [ $# -eq 0 ]; then
-  _print_usage
-  exit 1
-fi
+def read_envs(envm_dir):
+    env = {}
+    for f in os.listdir(envm_dir):
+        fullpath = os.path.join(envm_dir, f)
+        if os.path.isfile(fullpath):
+            env[f] = file_get_contents(fullpath).strip()
+    return env
 
-[ -d $envs_dir ] || mkdir -p $envs_dir
+def print_help():
+    print("Usage:")
+    print("  envm ls            - lists environment valiables")
+    print("  envm exec COMMAND  - wraps COMMAND with envdir")
+    print("  envm set KEY VALUE - sets environment valiables")
+    print("  envm get KEY       - gets the value of KEY")
+    print("  envm edit [KEY]    - edits with emacs")
+    print("  envm rm KEY        - removes the environment variable")
+    print("  envm help          - shows this message")
 
-while [ $# -gt 0 ]
-do
-    case $1 in
-        exec)
-            shift
-            exec envdir $envs_dir "$@"
-            ;;
-        ls)
-            exec env -i $(which envdir) $envs_dir printenv
-            shift
-            ;;
-        set)
-            shift
-            if [ $# -eq 1 ]; then
-                key=$(echo $1 | cut -f 1 -d =)
-                value=$(echo $1 | cut -f 2- -d =)
-                shift
-            else
-                key=$1
-                value=$2
-                shift
-                shift
-            fi
-            echo $value > "$envs_dir/$key"
-            ;;
-        get)
-            shift
-            cat "$envs_dir/$1"
-            shift
-            ;;
-        rm)
-            shift
-            rm "$envs_dir/$1"
-            shift
-            ;;
-        edit)
-            shift
-            if [ $# -eq 0 ]; then
-                $editor "$envs_dir"
-            else
-                $editor "$envs_dir/$1"
-                shift
-            fi
-            ;;
-        help)
-            _print_usage
-            shift
-            ;;
-        *)
-            _print_usage
-            exit 1
-            ;;
-    esac
-done
+def parse_args(args):
+    if len(args) == 0:
+        return {}
+
+    command = args[0]
+
+    if command == "ls":
+        return {"command": "ls"}
+
+    if command == "edit":
+        if len(args) > 1:
+            key = args[1]
+        else:
+            key = None
+
+        return {
+            "command": "edit",
+            "key": key
+        }
+
+    if command == "exec" > len(args) > 1:
+        return {
+            "command": "exec",
+            "program": args[1],
+            "args": args[1:],
+        }
+
+    if command == "set" and len(args) > 2:
+        return {
+            "command": "set",
+            "key": args[1],
+            "value": args[2],
+        }
+
+    if command == "get" and len(args) > 1:
+        return {
+            "command": "get",
+            "key": args[1],
+        }
+
+    if command == "rm" and len(args) > 1:
+        return {
+            "command": "rm",
+            "key": args[1],
+        }
+
+    return {}
+
+if __name__ == "__main__":
+    home = os.getenv("HOME")
+    cwd = os.getcwd()
+    envm_dir = os.path.join(home, ".envm", cwd.lstrip("/"))
+
+    args = parse_args(sys.argv[1:])
+
+    if len(args) == 0:
+        print_help()
+    else:
+        if args["command"] == "edit":
+            if not os.path.exists(envm_dir):
+                os.makedirs(envm_dir)
+            if args["key"] is None:
+                path = envm_dir
+            else:
+                path = os.path.join(envm_dir, args["key"])
+            os.execvpe("emacs", ["-nw", path], os.environ)
+        elif args["command"] == "exec":
+            env = dict(os.environ, **read_envs(envm_dir))
+            os.execvpe(args["program"], args["args"], env)
+        elif args["command"] == "ls":
+            for k, v in read_envs(envm_dir).items():
+                print("%s=%s" % (k, v))
+        elif args["command"] == "set":
+            path = os.path.join(envm_dir, args["key"])
+            file_put_contents(path, args["value"])
+        elif args["command"] == "get":
+            path = os.path.join(envm_dir, args["key"])
+            print(file_get_contents(path))
+        elif args["command"] == "rm":
+            path = os.path.join(envm_dir, args["key"])
+            os.remove(path)
+        else:
+            print_help()
