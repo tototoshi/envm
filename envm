@@ -87,6 +87,9 @@ if __name__ == "__main__":
     cwd = os.getcwd()
     envm_dir = os.path.join(home, ".envm", cwd.lstrip("/"))
 
+    if not os.path.exists(envm_dir):
+        os.makedirs(envm_dir)
+
     args = parse_args(sys.argv[1:])
 
     if len(args) == 0:
