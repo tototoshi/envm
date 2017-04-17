@@ -105,7 +105,11 @@ if __name__ == "__main__":
             os.execvpe("emacs", ["-nw", path], os.environ)
         elif args["command"] == "exec":
             env = dict(os.environ, **read_envs(envm_dir))
-            os.execvpe(args["program"], args["args"], env)
+            try:
+                os.execvpe(args["program"], args["args"], env)
+            except OSError as e:
+                print("Error :" + e.strerror)
+                sys.exit(1)
         elif args["command"] == "ls":
             for k, v in read_envs(envm_dir).items():
                 print("%s=%s" % (k, v))
