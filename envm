@@ -54,7 +54,7 @@ def parse_args(args):
             "key": key
         }
 
-    if command == "exec" > len(args) > 1:
+    if command == "exec" and len(args) > 1:
         return {
             "command": "exec",
             "program": args[1],
